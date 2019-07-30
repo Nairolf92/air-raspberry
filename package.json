@@ -1,17 +1,16 @@
 {
-  "name": "raspberry-temperature",
+  "name": "air-raspberry-graph",
   "author": "Florian Kelnerowski",
-  "homepage": "http://raspberryflo.ddns.net/raspberry-temperature/build",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "dependencies": {
     "axios": "^0.19.0",
-    "chart.js": "^2.8.0",
-    "react": "^16.8.6",
-    "react-chartjs-2": "^2.7.6",
-    "react-dom": "^16.8.6",
-    "react-icons": "^3.7.0",
-    "react-scripts": "3.0.1"
+    "chart.js": "^2.7.3",
+    "react": "^16.6.1",
+    "react-chartjs-2": "^2.7.4",
+    "react-dom": "^16.6.1",
+    "react-icons": "^3.2.2",
+    "react-scripts": "2.1.1"
   },
   "scripts": {
     "start": "react-scripts start",

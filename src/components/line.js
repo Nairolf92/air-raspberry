@@ -3,12 +3,12 @@ import {Line} from 'react-chartjs-2';
 import { FaAngleLeft, FaAngleRight} from 'react-icons/fa'; 
 import Axios from 'axios';
 
-var dataTemp = {}
+var dataAir = {}
 // current date = new date toujours pour le calcul des jours
 var currentDate = new Date()
 // display date = pour la recherche json et affichage
 var displayDate = currentDate.toLocaleDateString('fr-FR').slice(0,10);
-//console.log("currentdate"+currentDate)
+// console.log("currentdate"+currentDate)
 // console.log("displaydate"+displayDate)
 
 export class LineCustom extends React.Component {
@@ -18,18 +18,23 @@ export class LineCustom extends React.Component {
     this.goToPreviousDay = this.goToPreviousDay.bind(this, currentDate); 
     this.goToNextDay = this.goToNextDay.bind(this, currentDate); 
     this.state = {
-      arrayDate : this.getArrayOfDate(dataTemp, displayDate),
-      tempDate : this.getArrayOfTemp(dataTemp, displayDate),
-    }
+      arrayDate : this.getArrayOfDate(dataAir, displayDate),
+      pm2p5 : this.getArrayOfPM2p5(dataAir, displayDate),
+      pm2p5BackgroundColor : '',
+      pm10 : this.getArrayOfPM10(dataAir, displayDate),
+      pm10BackgroundColor : '',
+    };
     
-    Axios.get('https://floriankelnerow.ski/raspberry-temperature/data.json',{
+    Axios.get('https://floriankelnerow.ski/air-raspberry-graph/data.json',{
     }).then( response => {
-      dataTemp = response.data
+      dataAir = response.data;
       this.setState(state => ({
         currentDate : currentDate,
         displayDate : displayDate,
-        arrayDate : this.getArrayOfDate(dataTemp, displayDate),
-        tempDate : this.getArrayOfTemp(dataTemp, displayDate),
+        arrayDate : this.getArrayOfDate(dataAir, displayDate),
+        pm2p5 : this.getArrayOfPM2p5(dataAir, displayDate),
+        pm2p5BackgroundColor : this.getArrayOfpm2p5BackgroundColor(dataAir),
+        pm10 : this.getArrayOfPM10(dataAir, displayDate)
       }));
     })
     .catch(function (error) {
@@ -39,15 +44,16 @@ export class LineCustom extends React.Component {
 
   goToPreviousDay(currentDate){
     //console.log("goToPreviousDay");
-    currentDate.setDate(currentDate.getDate()-1)
+    currentDate.setDate(currentDate.getDate()-1);
     //console.log("currentDate : "+currentDate)
-    let displayDate = currentDate.toLocaleDateString('fr-FR')
+    let displayDate = currentDate.toLocaleDateString('fr-FR');
     //console.log("displayDate : "+displayDate)
     this.setState(state => ({
       currentDate : currentDate,
       displayDate : displayDate,
-      arrayDate : this.getArrayOfDate(dataTemp, displayDate),
-      tempDate : this.getArrayOfTemp(dataTemp, displayDate),
+      arrayDate : this.getArrayOfDate(dataAir, displayDate),
+      pm2p5 : this.getArrayOfPM2p5(dataAir, displayDate),
+      pm10 : this.getArrayOfPM10(dataAir, displayDate)
     }));
     //console.log("this.state.currentDate : "+this.state.currentDate)
     //console.log("this.state.displayDate : "+this.state.displayDate)
@@ -55,51 +61,62 @@ export class LineCustom extends React.Component {
   }
 
   goToNextDay(currentDate){
-    currentDate.setDate(currentDate.getDate()+1)
-    let displayDate = currentDate.toLocaleDateString('fr-FR')
+    currentDate.setDate(currentDate.getDate()+1);
+    let displayDate = currentDate.toLocaleDateString('fr-FR');
     this.setState(state => ({
       currentDate : currentDate,
       displayDate : displayDate,
-      arrayDate : this.getArrayOfDate(dataTemp, displayDate),
-      tempDate : this.getArrayOfTemp(dataTemp, displayDate),
+      arrayDate : this.getArrayOfDate(dataAir, displayDate),
+      pm2p5 : this.getArrayOfPM2p5(dataAir, displayDate),
+      pm10 : this.getArrayOfPM10(dataAir, displayDate)
     }));
   }
 
-  getArrayOfDate(dataTemp, displayDate)
+  getArrayOfDate(dataAir, displayDate)
   {
-    // Old way to process
+    // ES6 format
     let data = [];
-    for (var key in dataTemp) {
-      //console.log(key.substring(0,10))
-      if(key.substring(0,10) === displayDate) {
-        //console.log(key)
-        data.push(key)
+    Object.entries(dataAir).forEach(([key, value]) => {
+      if (value.datetime.substring(0, 10) === displayDate) {
+        data.push(value.datetime)
       }
-    }
+    });
     return data
   }
 
-  getArrayOfTemp(dataTemp, displayDate)
+  getArrayOfPM2p5(dataAir, displayDate)
   {
-    // ES6 format 
     let data = [];
-    Object.entries(dataTemp).forEach(([key, value]) => {
-      if(key.substring(0,10) === displayDate)
-        data.push(value)
-    })
+    Object.entries(dataAir).forEach(([key, value]) => {
+      if(value.datetime.substring(0,10) === displayDate)
+        data.push(value.pm25)
+    });
     return data
   }
 
-  getFormattedDate(d) {
-    let month = String(d.getMonth() + 1);
-    let day = String(d.getDate());
-    let year = String(d.getYear());
-    year = year -100;
-  
-    if (month.length < 2) month = '0' + month;
-    if (day.length < 2) day = '0' + day;
-  
-    return `${day}-${month}-${year}`;
+  getArrayOfpm2p5BackgroundColor(dataAir)
+  {
+    let data = [];
+    Object.entries(dataAir).forEach(([key, value]) => {
+      switch (true) {
+        case value.pm25 < 55.0 :
+          data.push("rgba(0,153,102,1)");
+          break;
+        default :
+          console.log("default")
+      }
+    });
+    return data
+  }
+
+  getArrayOfPM10(dataAir, displayDate)
+  {
+    let data = [];
+    Object.entries(dataAir).forEach(([key, value]) => {
+      if(value.datetime.substring(0,10) === displayDate)
+        data.push(value.pm10)
+    });
+    return data
   }
 
   render() {
@@ -107,14 +124,24 @@ export class LineCustom extends React.Component {
       labels : this.state.arrayDate,
       datasets: [
         {
-          label: 'Raspberry temperature (°C)',
-          fill: false,
+          label: 'PM 2,5',
+          fill: true,
+          lineTension: 0.1,
+          backgroundColor: this.state.pm2p5BackgroundColor,
+          borderColor: 'rgba(75,192,192,1)',
+          pointBorderColor: 'rgba(75,192,192,1)',
+          pointBackgroundColor: '#fff',
+          data: this.state.pm2p5
+        },
+        {
+          label: 'PM 10',
+          fill: true,
           lineTension: 0.1,
           backgroundColor: 'rgba(75,192,192,0.4)',
           borderColor: 'rgba(75,192,192,1)',
           pointBorderColor: 'rgba(75,192,192,1)',
           pointBackgroundColor: '#fff',
-          data: this.state.tempDate
+          data: this.state.pm10
         }
       ] 
     };
