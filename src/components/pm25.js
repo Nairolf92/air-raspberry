@@ -1,17 +1,17 @@
 import React from 'react';
-import {Line} from 'react-chartjs-2';
+import {Bar} from 'react-chartjs-2';
 import { FaAngleLeft, FaAngleRight} from 'react-icons/fa'; 
 import Axios from 'axios';
 
-var dataAir = {}
+var dataAir = {};
 // current date = new date toujours pour le calcul des jours
-var currentDate = new Date()
+var currentDate = new Date();
 // display date = pour la recherche json et affichage
 var displayDate = currentDate.toLocaleDateString('fr-FR').slice(0,10);
 // console.log("currentdate"+currentDate)
 // console.log("displaydate"+displayDate)
 
-export class LineCustom extends React.Component {
+export class PM25 extends React.Component {
   constructor(props) {
     super(props);
     // This binding is necessary to make `this` work in the callback
@@ -21,8 +21,6 @@ export class LineCustom extends React.Component {
       arrayDate : this.getArrayOfDate(dataAir, displayDate),
       pm2p5 : this.getArrayOfPM2p5(dataAir, displayDate),
       pm2p5BackgroundColor : '',
-      pm10 : this.getArrayOfPM10(dataAir, displayDate),
-      pm10BackgroundColor : '',
     };
     
     Axios.get('https://floriankelnerow.ski/air-raspberry-graph/data.json',{
@@ -33,8 +31,7 @@ export class LineCustom extends React.Component {
         displayDate : displayDate,
         arrayDate : this.getArrayOfDate(dataAir, displayDate),
         pm2p5 : this.getArrayOfPM2p5(dataAir, displayDate),
-        pm2p5BackgroundColor : this.getArrayOfpm2p5BackgroundColor(dataAir),
-        pm10 : this.getArrayOfPM10(dataAir, displayDate)
+        pm2p5BackgroundColor : this.getArrayOfpm2p5BackgroundColor(dataAir, displayDate),
       }));
     })
     .catch(function (error) {
@@ -53,7 +50,7 @@ export class LineCustom extends React.Component {
       displayDate : displayDate,
       arrayDate : this.getArrayOfDate(dataAir, displayDate),
       pm2p5 : this.getArrayOfPM2p5(dataAir, displayDate),
-      pm10 : this.getArrayOfPM10(dataAir, displayDate)
+      pm2p5BackgroundColor : this.getArrayOfpm2p5BackgroundColor(dataAir, displayDate)
     }));
     //console.log("this.state.currentDate : "+this.state.currentDate)
     //console.log("this.state.displayDate : "+this.state.displayDate)
@@ -68,7 +65,7 @@ export class LineCustom extends React.Component {
       displayDate : displayDate,
       arrayDate : this.getArrayOfDate(dataAir, displayDate),
       pm2p5 : this.getArrayOfPM2p5(dataAir, displayDate),
-      pm10 : this.getArrayOfPM10(dataAir, displayDate)
+      pm2p5BackgroundColor : this.getArrayOfpm2p5BackgroundColor(dataAir, displayDate)
     }));
   }
 
@@ -94,56 +91,42 @@ export class LineCustom extends React.Component {
     return data
   }
 
-  getArrayOfpm2p5BackgroundColor(dataAir)
+  getArrayOfpm2p5BackgroundColor(dataAir, displayDate)
   {
     let data = [];
     Object.entries(dataAir).forEach(([key, value]) => {
-      switch (true) {
-        case value.pm25 < 55.0 :
+      let pm2p5 = value.pm25;
+      // console.log(pm2p5);
+      if(value.datetime.substring(0,10) === displayDate) {
+        if (pm2p5 <= 11.8){
           data.push("rgba(0,153,102,1)");
-          break;
-        default :
-          console.log("default")
+        } else if (pm2p5 <= 35.2 && pm2p5 >= 11.9){
+          data.push("rgba(255,222,51,1)");
+        } else if (pm2p5 <= 55.2 && pm2p5 >= 35.3){
+          data.push("rgba(255,153,51,1)");
+        } else if (pm2p5 <= 149.5 && pm2p5 >= 55.3){
+          data.push("rgba(204,0,51,1)");
+        } else if (pm2p5 <= 249.9 && pm2p5 >= 149.6){
+          data.push("rgba(102,0,153,1)");
+        } else if(pm2p5 > 250) {
+          data.push("rgba(126,0,35,1)");
+        }
       }
     });
     return data
   }
 
-  getArrayOfPM10(dataAir, displayDate)
-  {
-    let data = [];
-    Object.entries(dataAir).forEach(([key, value]) => {
-      if(value.datetime.substring(0,10) === displayDate)
-        data.push(value.pm10)
-    });
-    return data
-  }
-
   render() {
+    // console.log(this.state.pm2p5BackgroundColor);
+    // console.log(this.state.pm2p5);
     const data = {
       labels : this.state.arrayDate,
-      datasets: [
-        {
+      datasets: [{
           label: 'PM 2,5',
-          fill: true,
-          lineTension: 0.1,
-          backgroundColor: this.state.pm2p5BackgroundColor,
-          borderColor: 'rgba(75,192,192,1)',
-          pointBorderColor: 'rgba(75,192,192,1)',
-          pointBackgroundColor: '#fff',
-          data: this.state.pm2p5
-        },
-        {
-          label: 'PM 10',
-          fill: true,
-          lineTension: 0.1,
-          backgroundColor: 'rgba(75,192,192,0.4)',
-          borderColor: 'rgba(75,192,192,1)',
-          pointBorderColor: 'rgba(75,192,192,1)',
-          pointBackgroundColor: '#fff',
-          data: this.state.pm10
+          data: this.state.pm2p5,
+          backgroundColor : this.state.pm2p5BackgroundColor
         }
-      ] 
+      ]
     };
 
     return (
@@ -153,11 +136,10 @@ export class LineCustom extends React.Component {
           <h2>{this.state.displayDate}</h2>
           <FaAngleRight size='3em' onClick={this.goToNextDay}/>
         </span>
-
-        <Line data={data} />
+        <Bar data={data} />
       </div>
     );
   }
-};
+}
 
-export default LineCustom;
+export default PM25;
