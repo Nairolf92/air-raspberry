@@ -1,6 +1,7 @@
 {
   "name": "air-raspberry-graph",
   "author": "Florian Kelnerowski",
+  "homepage" : "https://floriankelnerow.ski/portfolio/raspberry-fine-particles/build",
   "version": "1.0.0",
   "private": true,
   "dependencies": {

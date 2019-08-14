@@ -19,7 +19,7 @@ export class PM10 extends React.Component {
       pm10BackgroundColor : '',
     };
 
-    Axios.get('https://floriankelnerow.ski/air-raspberry-graph/data.json',{
+    Axios.get('https://floriankelnerow.ski/raspberry-fine-particles/data.json',{
     }).then( response => {
       dataAir = response.data;
       this.setState(state => ({
